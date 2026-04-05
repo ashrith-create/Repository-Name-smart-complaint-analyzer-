@@ -54,23 +54,26 @@ def send_email_alert(complaint):
 def index():
     result = None
 
-    if request.method == "POST":
+   if request.method == "POST":
 
-        complaint = request.form["complaint"]
-        tracking_id = str(uuid.uuid4())[:8]
+    complaint = request.form["complaint"]
+    tracking_id = str(uuid.uuid4())[:8]
 
+    try:
         category = predict_category(complaint)
-        urgency = detect_urgency(complaint)
+    except:
+        category = "General"
 
-       # sentiment_score = TextBlob(complaint).sentiment.polarity
-         sentiment_score = 0
+    urgency = detect_urgency(complaint)
 
-        if sentiment_score < 0:
-            mood = "Negative 😡"
-        elif sentiment_score == 0:
-            mood = "Neutral 😐"
-        else:
-            mood = "Positive 🙂"
+    sentiment_score = 0   # ✅ CORRECT ALIGNMENT
+
+    if sentiment_score < 0:
+        mood = "Negative 😡"
+    elif sentiment_score == 0:
+        mood = "Neutral 😐"
+    else:
+        mood = "Positive 🙂"
 
         # 📧 SEND EMAIL IF HIGH
       #  if urgency == "High":
