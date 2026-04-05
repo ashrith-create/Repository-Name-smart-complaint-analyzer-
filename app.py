@@ -4,6 +4,8 @@ import sqlite3
 from model import predict_category
 import uuid
 import smtplib
+import nltk
+nltk.download('punkt')
 
 app = Flask(__name__)
 
