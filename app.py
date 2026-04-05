@@ -9,7 +9,6 @@ import nltk
 nltk.download('punkt')
 
 app = Flask(__name__)
-
 # ---------- DATABASE SETUP ----------
 def init_db():
     conn = sqlite3.connect("/tmp/complaints.db")
