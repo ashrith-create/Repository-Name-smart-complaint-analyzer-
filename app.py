@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request
 from textblob import TextBlob
 import sqlite3
-from model import predict_category
 import uuid
 import smtplib
+def predict_category(text):
+    return "General"
 import nltk
 nltk.download('punkt')
 
@@ -61,7 +62,8 @@ def index():
         category = predict_category(complaint)
         urgency = detect_urgency(complaint)
 
-        sentiment_score = TextBlob(complaint).sentiment.polarity
+       # sentiment_score = TextBlob(complaint).sentiment.polarity
+         sentiment_score = 0
 
         if sentiment_score < 0:
             mood = "Negative 😡"
