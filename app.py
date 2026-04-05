@@ -1,84 +1,158 @@
-from flask import Flask, render_template, request
-from textblob import TextBlob
-import sqlite3
-import uuid
-import smtplib
-def predict_category(text):
-    return "General"
-import nltk
-nltk.download('punkt')
+# from flask import Flask, render_template, request
+# from textblob import TextBlob
+# import sqlite3
+# import uuid
+# import smtplib
+# def predict_category(text):
+#     return "General"
+# import nltk
+# nltk.download('punkt')
 
-app = Flask(__name__)
-# ---------- DATABASE SETUP ----------
-def init_db():
-    conn = sqlite3.connect("/tmp/complaints.db")
-    cursor = conn.cursor()
+# app = Flask(__name__)
+# # ---------- DATABASE SETUP ----------
+# def init_db():
+#     conn = sqlite3.connect("/tmp/complaints.db")
+#     cursor = conn.cursor()
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS complaints (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        tracking_id TEXT,
-        text TEXT,
-        category TEXT,
-        urgency TEXT,
-        sentiment TEXT
-    )
-    """)
-    conn.commit()
-    conn.close()
-init_db()
+#     cursor.execute("""
+#     CREATE TABLE IF NOT EXISTS complaints (
+#         id INTEGER PRIMARY KEY AUTOINCREMENT,
+#         tracking_id TEXT,
+#         text TEXT,
+#         category TEXT,
+#         urgency TEXT,
+#         sentiment TEXT
+#     )
+#     """)
+#     conn.commit()
+#     conn.close()
+# init_db()
 
-# ---------- LOGIC ----------
-def detect_urgency(text):
-    if "urgent" in text or "immediately" in text:
-        return "High"
-    elif "soon" in text:
-        return "Medium"
-    else:
-        return "Low"
+# # ---------- LOGIC ----------
+# def detect_urgency(text):
+#     if "urgent" in text or "immediately" in text:
+#         return "High"
+#     elif "soon" in text:
+#         return "Medium"
+#     else:
+#         return "Low"
 
-# ---------- EMAIL ----------
-def send_email_alert(complaint):
-    sender = "ashrithlucky8@gmail.com"
-    password = "aoolvremcdtpztoy"
-    message = f"URGENT COMPLAINT:\n\n{complaint}"
-    server = smtplib.SMTP("smtp.gmail.com", 587)
-    server.starttls()
-    server.login(sender, password)
-    server.sendmail(sender, sender, message)
-    server.quit()
+# # ---------- EMAIL ----------
+# def send_email_alert(complaint):
+#     sender = "ashrithlucky8@gmail.com"
+#     password = "aoolvremcdtpztoy"
+#     message = f"URGENT COMPLAINT:\n\n{complaint}"
+#     server = smtplib.SMTP("smtp.gmail.com", 587)
+#     server.starttls()
+#     server.login(sender, password)
+#     server.sendmail(sender, sender, message)
+#     server.quit()
 
-# ---------- ROUTES ----------
+# # ---------- ROUTES ----------
+# @app.route("/", methods=["GET", "POST"])
+# def index():
+#     result = None
+
+#    if request.method == "POST":
+
+#     complaint = request.form["complaint"]
+#     tracking_id = str(uuid.uuid4())[:8]
+
+#     try:
+#         category = predict_category(complaint)
+#     except:
+#         category = "General"
+
+#     urgency = detect_urgency(complaint)
+
+#     sentiment_score = 0   # ✅ CORRECT ALIGNMENT
+
+#     if sentiment_score < 0:
+#         mood = "Negative 😡"
+#     elif sentiment_score == 0:
+#         mood = "Neutral 😐"
+#     else:
+#         mood = "Positive 🙂"
+
+#         # 📧 SEND EMAIL IF HIGH
+#       #  if urgency == "High":
+#        #     send_email_alert(complaint)
+
+#         # 💾 SAVE TO DATABASE
+#         conn = sqlite3.connect("/tmp/complaints.db")
+#         cursor = conn.cursor()
+
+#         cursor.execute(
+#             "INSERT INTO complaints (tracking_id, text, category, urgency, sentiment) VALUES (?, ?, ?, ?, ?)",
+#             (tracking_id, complaint, category, urgency, mood)
+#         )
+
+#         conn.commit()
+#         conn.close()
+
+#         # 🎯 RESULT TO FRONTEND
+#         result = {
+#             "category": category,
+#             "urgency": urgency,
+#             "sentiment": mood,
+#             "tracking_id": tracking_id
+#         }
+
+#     return render_template("index.html", result=result)
+
+# # ---------- HISTORY ----------
+# @app.route("/history")
+# def history():
+#     conn = sqlite3.connect("/tmp/complaints.db")
+#     cursor = conn.cursor()
+
+#     cursor.execute("SELECT * FROM complaints")
+#     data = cursor.fetchall()
+
+#     conn.close()
+
+#     return render_template("history.html", data=data)
+
+# # ---------- RUN ----------
+# if __name__ == "__main__":
+#     app.run(debug=True)
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
 
-   if request.method == "POST":
+    if request.method == "POST":
+        complaint = request.form["complaint"]
+        tracking_id = str(uuid.uuid4())[:8]
 
-    complaint = request.form["complaint"]
-    tracking_id = str(uuid.uuid4())[:8]
+        try:
+            category = predict_category(complaint)
+        except:
+            category = "General"
 
-    try:
-        category = predict_category(complaint)
-    except:
-        category = "General"
+        urgency = detect_urgency(complaint)
 
-    urgency = detect_urgency(complaint)
+        # ✅ Safe sentiment
+        try:
+            blob = TextBlob(complaint)
+            sentiment_score = blob.sentiment.polarity
+        except:
+            sentiment_score = 0
 
-    sentiment_score = 0   # ✅ CORRECT ALIGNMENT
+        if sentiment_score < 0:
+            mood = "Negative 😡"
+        elif sentiment_score == 0:
+            mood = "Neutral 😐"
+        else:
+            mood = "Positive 🙂"
 
-    if sentiment_score < 0:
-        mood = "Negative 😡"
-    elif sentiment_score == 0:
-        mood = "Neutral 😐"
-    else:
-        mood = "Positive 🙂"
+        # ✅ Safe email
+        try:
+            if urgency == "High":
+                send_email_alert(complaint)
+        except:
+            print("Email failed")
 
-        # 📧 SEND EMAIL IF HIGH
-      #  if urgency == "High":
-       #     send_email_alert(complaint)
-
-        # 💾 SAVE TO DATABASE
+        # ✅ Database
         conn = sqlite3.connect("/tmp/complaints.db")
         cursor = conn.cursor()
 
@@ -90,7 +164,6 @@ def index():
         conn.commit()
         conn.close()
 
-        # 🎯 RESULT TO FRONTEND
         result = {
             "category": category,
             "urgency": urgency,
@@ -99,20 +172,3 @@ def index():
         }
 
     return render_template("index.html", result=result)
-
-# ---------- HISTORY ----------
-@app.route("/history")
-def history():
-    conn = sqlite3.connect("/tmp/complaints.db")
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM complaints")
-    data = cursor.fetchall()
-
-    conn.close()
-
-    return render_template("history.html", data=data)
-
-# ---------- RUN ----------
-if __name__ == "__main__":
-    app.run(debug=True)
