@@ -75,7 +75,7 @@ def index():
        #     send_email_alert(complaint)
 
         # 💾 SAVE TO DATABASE
-        conn = sqlite3.connect("complaints.db")
+        conn = sqlite3.connect("/tmp/complaints.db")
         cursor = conn.cursor()
 
         cursor.execute(
@@ -99,7 +99,7 @@ def index():
 # ---------- HISTORY ----------
 @app.route("/history")
 def history():
-    conn = sqlite3.connect("complaints.db")
+    conn = sqlite3.connect("/tmp/complaints.db")
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM complaints")
