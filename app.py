@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 # ---------- DATABASE SETUP ----------
 def init_db():
-    conn = sqlite3.connect("complaints.db")
+    conn = sqlite3.connect("/tmp/complaints.db")
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -71,8 +71,8 @@ def index():
             mood = "Positive 🙂"
 
         # 📧 SEND EMAIL IF HIGH
-        if urgency == "High":
-            send_email_alert(complaint)
+      #  if urgency == "High":
+       #     send_email_alert(complaint)
 
         # 💾 SAVE TO DATABASE
         conn = sqlite3.connect("complaints.db")
